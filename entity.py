@@ -1,16 +1,14 @@
 import pygame as py
-from main import *
 
 
-class Player(py.sprite.Sprite):
-    def __init__(self, x, y, scale, speed):
-        py.sprite.Sprite.__init__(self)
-        self.speed = speed
-        img_player = ""
-        self.image = py.transform.scale(
-            img_player, (int(img_player.get_width() * scale), int(img_player.get_height() * scale)))
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
+class SpriteSheet():
+    def __init__(self, img):
+        self.sheet = img
 
-    def draw(self):
-        window.blit(self.image, self.rect)
+    def get_image(self, frame, width, height, scale, colour):
+        img = py.Surface((width, height)).convert_alpha()
+        img.blit(self.sheet, (0, 0), ((frame * width), 0, width, height))
+        img = py.transform.scale(img, (width * scale, height * scale))
+        img.set_colorkey(colour)
+
+        return img
