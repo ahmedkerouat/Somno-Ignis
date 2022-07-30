@@ -23,51 +23,56 @@ clock = py.time.Clock()
 main_font = py.font.Font(
     "ressources\mainfont.ttf", 16)
 
-
+move_left = False
+move_right = False
 # Player
+
+
 class Player(py.sprite.Sprite):
 
     def __init__(self, x, y, scale, speed):
 
+        self.x = x
+        self.y = y
+        self.scale = scale
+        self.speed = speed
+        self.flip = False
+
+    def draw(self):
         sprite_sheet_image_player = py.image.load(
             'ressources\sprites\characters\player_fire.png').convert_alpha()
         sprite_sheet_player = SpriteSheet(sprite_sheet_image_player)
         py.sprite.Sprite.__init__(self)
-        img_player = sprite_sheet_player.get_image(0, 50, 50, 3, BLACK)
-
-        self.speed = speed
+        img_player = sprite_sheet_player.get_image(
+            0, 50, 50, 3, (0, 0, 0), )
         self.image = py.transform.scale(
-            img_player, (int(img_player.get_width() * scale), int(img_player.get_height() * scale)))
+            img_player, (int(img_player.get_width() * self.scale), int(img_player.get_height() * self.scale)))
         self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-
-    def draw(self):
-
-        window.blit(self.image, self.rect)
+        self.rect.center = (self.x, self.y)
+        window.blit(py.transform.flip(
+            self.image, self.flip, False), self.rect)
 
 
 player1 = Player(400, 400, 1, 3)
 
 # Controls
-move_left = False
-move_right = True
 
 
 def game_input():
     keys = py.key.get_pressed()
 
     if keys[py.K_d]:
-        move_right = True
-        move_left = False
+        player1.flip = False
+        player1.x += 3
 
     if keys[py.K_q]:
-        move_left = True
-        move_right = False
+        player1.flip = True
+        player1.x -= 3
     if keys[py.K_s]:
-        pass
+        player1.y += 3
 
     if keys[py.K_z]:
-        pass
+        player1.y -= 3
 
 
 # rendering the game
@@ -78,9 +83,10 @@ points = 0
 
 def game_render():
     #window.blit(bg, (0,0))
+    window.fill((50, 50, 50))
     points_render = main_font.render(f"Points : {points}", 1, WHITE)
-    window.blit(points_render, (10, 10))
     player1.draw()
+    window.blit(points_render, (10, 10))
     # other things to blit.
     py.display.update()
 
