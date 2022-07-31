@@ -38,7 +38,9 @@ class Player(py.sprite.Sprite):
         self.scale = scale
         self.speed = speed
         self.flip = False
-        self.movement = False
+        self.idle = True
+        self.run = False
+        self.attack = False
         self.frame_index = 0
 
         py.sprite.Sprite.__init__(self)
@@ -47,64 +49,77 @@ class Player(py.sprite.Sprite):
             'ressources\sprites\characters\player_fire.png').convert_alpha()
         self.sprite_sheet_player = SpriteSheet(sprite_sheet_image_player)
         self.img_player = self.sprite_sheet_player.get_image(
-            0, 50, 50, 3, (0, 0, 0), )
+            0, 0, 50, 50, 3, (0, 0, 0), )
 
         self.image = py.transform.scale(
             self.img_player, (int(self.img_player.get_width() * self.scale), int(self.img_player.get_height() * self.scale)))
 
         self.last_update = py.time.get_ticks()
 
-    def movement_animation(self):
-        pass
+    def animation(self, animation, max_frame):
+        if py.time.get_ticks() - self.last_update >= 50:
+            img_player = self.sprite_sheet_player.get_image(
+                self.frame_index, animation, 48, 50, 3, (0, 0, 0))
+            self.image = py.transform.scale(
+                img_player, (int(img_player.get_width() * self.scale), int(img_player.get_height() * self.scale)))
+            self.frame_index += 1
+            self.last_update = py.time.get_ticks()
+
+        if self.frame_index > max_frame:
+            self.frame_index = 0
 
     def draw(self):
 
-        if self.movement == False:
-            if py.time.get_ticks() - self.last_update >= 50:
-                img_player = self.sprite_sheet_player.get_image(
-                    self.frame_index, 48, 50, 3, (0, 0, 0))
-                self.image = py.transform.scale(
-                    img_player, (int(img_player.get_width() * self.scale), int(img_player.get_height() * self.scale)))
-                self.frame_index += 1
-                print(self.frame_index)
-                self.last_update = py.time.get_ticks()
+        if self.idle == True:
+            self.animation(0, 5)
 
-            if self.frame_index > 5:
-                self.frame_index = 0
+        if self.run == True:
+            self.animation(1, 5)
+
+        if self.attack == True:
+            self.animation(2, 3)
 
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-
         window.blit(py.transform.flip(
             self.image, self.flip, False), self.rect)
 
 
-player1 = Player(400, 400, 1, 2)
+player1 = Player(400, 400, 1, 2.5)
 
 # Controls
 
 
 def game_input():
     keys = py.key.get_pressed()
-    player1.movement = False
+    player1.idle = True
+    player1.run = False
+
+    if keys[py.K_SPACE]:
+        player1.idle = False
+        player1.attack = True
 
     if keys[py.K_d]:
         player1.flip = False
         player1.x += 1 * player1.speed
-        player1.movement = True
+        player1.idle = False
+        player1.run = True
 
     if keys[py.K_q]:
         player1.flip = True
         player1.x -= 1 * player1.speed
-        player1.movement = True
+        player1.idle = False
+        player1.run = True
 
     if keys[py.K_s]:
         player1.y += 1 * player1.speed
-        player1.movement = True
+        player1.idle = False
+        player1.run = True
 
     if keys[py.K_z]:
         player1.y -= 1 * player1.speed
-        player1.movement = True
+        player1.idle = False
+        player1.run = True
 
 
 # rendering the game
