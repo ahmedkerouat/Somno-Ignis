@@ -1,7 +1,6 @@
-from tkinter import Frame
 import pygame as py
 import sys
-from entity import *
+from entity import SpriteSheet
 
 
 # constants
@@ -24,8 +23,6 @@ clock = py.time.Clock()
 main_font = py.font.Font(
     "ressources\mainfont.ttf", 16)
 
-move_left = False
-move_right = False
 # Player
 
 
@@ -41,6 +38,7 @@ class Player(py.sprite.Sprite):
         self.idle = True
         self.run = False
         self.attack = False
+        self.energy = 100
         self.frame_index = 0
 
         py.sprite.Sprite.__init__(self)
@@ -56,7 +54,15 @@ class Player(py.sprite.Sprite):
 
         self.last_update = py.time.get_ticks()
 
-    def animation(self, animation, max_frame):
+    def energy_status(self):
+        py.draw.rect(window, (80, 80, 200), py.Rect(
+            10, 770, (self.energy * 2), 18), 1, 3)
+        energy_render = main_font.render(
+            f"Energy : {round(self.energy) } %", 1, (255, 255, 255))
+        window.blit(energy_render,
+                    ((self.energy // 2), 772))
+
+    def animate(self, animation, max_frame):
         if py.time.get_ticks() - self.last_update >= 50:
             img_player = self.sprite_sheet_player.get_image(
                 self.frame_index, animation, 48, 50, 3, (0, 0, 0))
@@ -71,13 +77,13 @@ class Player(py.sprite.Sprite):
     def draw(self):
 
         if self.idle == True:
-            self.animation(0, 5)
+            self.animate(0, 5)
 
         if self.run == True:
-            self.animation(1, 5)
+            self.animate(1, 5)
 
         if self.attack == True:
-            self.animation(2, 3)
+            self.animate(2, 3)
 
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
@@ -94,32 +100,41 @@ def game_input():
     keys = py.key.get_pressed()
     player1.idle = True
     player1.run = False
+    if player1.idle == True:
+        if player1.energy < 100:
+            player1.energy += 0.1
 
-    if keys[py.K_SPACE]:
-        player1.idle = False
-        player1.attack = True
+    if player1.energy > 10:
+        if keys[py.K_SPACE]:
+            player1.idle = False
+            player1.attack = True
+            player1.energy -= 1
 
-    if keys[py.K_d]:
-        player1.flip = False
-        player1.x += 1 * player1.speed
-        player1.idle = False
-        player1.run = True
+        if keys[py.K_d]:
+            player1.flip = False
+            player1.x += 1 * player1.speed
+            player1.idle = False
+            player1.run = True
+            player1.energy -= 0.08
 
-    if keys[py.K_q]:
-        player1.flip = True
-        player1.x -= 1 * player1.speed
-        player1.idle = False
-        player1.run = True
+        if keys[py.K_q]:
+            player1.flip = True
+            player1.x -= 1 * player1.speed
+            player1.idle = False
+            player1.run = True
+            player1.energy -= 0.08
 
-    if keys[py.K_s]:
-        player1.y += 1 * player1.speed
-        player1.idle = False
-        player1.run = True
+        if keys[py.K_s]:
+            player1.y += 1 * player1.speed
+            player1.idle = False
+            player1.run = True
+            player1.energy -= 0.08
 
-    if keys[py.K_z]:
-        player1.y -= 1 * player1.speed
-        player1.idle = False
-        player1.run = True
+        if keys[py.K_z]:
+            player1.y -= 1 * player1.speed
+            player1.idle = False
+            player1.run = True
+            player1.energy -= 0.08
 
 
 # rendering the game
@@ -130,6 +145,7 @@ def game_render():
     # window.blit(bg, (0,0))
     window.fill((50, 50, 50))
     points_render = main_font.render(f"Points : {points}", 1, WHITE)
+    player1.energy_status()
     player1.draw()
     window.blit(points_render, (10, 10))
     # other things to blit.
@@ -147,7 +163,6 @@ def main():
             if event.type == py.QUIT:
                 run = False
                 sys.exit()
-
         game_input()
         game_render()
 
