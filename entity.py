@@ -95,3 +95,25 @@ class Player(py.sprite.Sprite):
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(
             self.image, self.flip, False), self.rect)
+
+
+class Bed(py.sprite.Sprite):
+
+    '''
+    If the bed is broken, the game ends. The player can respawn if the bed is still not broken.
+    '''
+
+    def __init__(self, x, y, scale):
+
+        self.x = x
+        self.y = y
+        self.scale = scale
+
+    def is_broken():
+
+        pass
+
+    def draw():
+
+        # Method used for displaying the bed on the screen.
+        pass
