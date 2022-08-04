@@ -117,3 +117,9 @@ class Bed(py.sprite.Sprite):
 
         # Method used for displaying the bed on the screen.
         pass
+
+
+class Bullet(py.sprite.Sprite):
+
+    def __init__(self, x, y, direction):
+        pass
