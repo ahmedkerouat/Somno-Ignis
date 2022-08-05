@@ -35,8 +35,10 @@ class Player(py.sprite.Sprite):
         self.idle = True
         self.run = False
         self.attack = False
+        self.shoot = False
         self.energy = 100
         self.frame_index = 0
+        self.latency = 50
 
         py.sprite.Sprite.__init__(self)
 
@@ -67,7 +69,7 @@ class Player(py.sprite.Sprite):
 
         # Method used for creating animation, depending on the player input.
 
-        if py.time.get_ticks() - self.last_update >= 50:
+        if py.time.get_ticks() - self.last_update >= self.latency:
             img_player = self.sprite_sheet_player.get_image(
                 self.frame_index, animation, self.height, self.width, 3, (0, 0, 0))
             self.image = py.transform.scale(
@@ -90,6 +92,9 @@ class Player(py.sprite.Sprite):
 
         if self.attack == True:
             self.animate(2, 3)
+
+        if self.shoot == True:
+            self.animate(3, 3)
 
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)

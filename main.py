@@ -35,7 +35,8 @@ def game_input():
     keys = py.key.get_pressed()
     player1.idle = True
     player1.run = False
-    player1.attack == False
+    player1.attack = False
+    player1.shoot = False
 
     if player1.idle == True:
         if player1.energy < 100:
@@ -43,11 +44,24 @@ def game_input():
         if 50 < player1.energy < 99:
             player1.energy *= 1.005
 
+    if player1.idle == False:
+        last_update = py.time.get_ticks()
+
     if player1.energy > 10:
+
         if keys[py.K_SPACE]:
+
             player1.idle = False
             player1.attack = True
-            player1.energy -= 1
+            player1.energy -= 1.5
+
+        if player1.energy > 40:
+
+            if keys[py.K_a]:
+
+                player1.idle = False
+                player1.shoot = True
+                player1.energy -= 2
 
         if keys[py.K_d] and player1.x < WIDTH - player1.width // 3:
             player1.flip = False
