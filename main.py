@@ -95,7 +95,6 @@ points = 0
 
 
 def game_render():
-
     # window.blit(bg, (0,0))
     window.fill((50, 50, 50))
     points_render = main_font.render(f"Points : {points}", 1, WHITE)

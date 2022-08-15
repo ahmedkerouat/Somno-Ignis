@@ -52,7 +52,6 @@ class Player(py.sprite.Sprite):
             self.img_player, (int(self.img_player.get_width() * self.scale), int(self.img_player.get_height() * self.scale)))
 
         self.last_update = py.time.get_ticks()
-        self.last_shot = py.time.get_ticks()
 
     def energy_status(self, surface, font):
 
@@ -95,9 +94,7 @@ class Player(py.sprite.Sprite):
             self.animate(2, 3)
 
         if self.shoot == True:
-            self.current_update = py.time.get_ticks()
-            if self.current_update - self.last_shot > 100 :
-                self.animate(3, 3)
+            self.animate(3, 3)
 
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
