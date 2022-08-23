@@ -38,7 +38,9 @@ class Player(py.sprite.Sprite):
         self.shoot = False
         self.energy = 100
         self.frame_index = 0
-        self.latency = 50
+        self.latency = 48
+        self.cooldown_status = 0
+        self.color_energy = 80, 80, 200
 
         py.sprite.Sprite.__init__(self)
 
@@ -55,12 +57,17 @@ class Player(py.sprite.Sprite):
 
     def energy_status(self, surface, font):
 
-        py.draw.rect(surface, (80, 80, 200), py.Rect(
+        py.draw.rect(surface, self.color_energy, py.Rect(
             10, 770, (self.energy * 2), 18), 0, 3)
-        py.draw.rect(surface, (80, 80, 200), py.Rect(
+        py.draw.rect(surface, self.color_energy, py.Rect(
             10, 770, (100 * 2), 18), 2, 3)
         energy_render = font.render(
             f"Energy : {round(self.energy) } %", 1, (255, 255, 255))
+
+        if self.energy < 10:
+            self.color_energy = 100, 0, 0
+        else:
+            self.color_energy = 80, 80, 200
 
         surface.blit(energy_render,
                      (60, 772))
@@ -84,17 +91,21 @@ class Player(py.sprite.Sprite):
 
         # Method used for displaying the Player on the screen.
 
-        if self.idle == True:
-            self.animate(0, 5)
-
-        if self.run == True:
-            self.animate(1, 5)
-
         if self.attack == True:
+            self.idle = False
             self.animate(2, 3)
 
+        if self.run == True:
+            self.idle = False
+            self.animate(1, 5)
+
         if self.shoot == True:
+            self.idle = False
             self.animate(3, 3)
+
+        else:
+            self.idle = True
+            self.animate(0, 5)
 
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
