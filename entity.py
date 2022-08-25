@@ -37,6 +37,7 @@ class Player(py.sprite.Sprite):
         self.attack = False
         self.shoot = False
         self.energy = 100
+        self.bullets = []
         self.frame_index = 0
         self.latency = 48
         self.cooldown_status = 0
@@ -64,10 +65,14 @@ class Player(py.sprite.Sprite):
         energy_render = font.render(
             f"Energy : {round(self.energy) } %", 1, (255, 255, 255))
 
-        if self.energy < 10:
-            self.color_energy = 100, 0, 0
-        else:
+        if self.energy > 30:
             self.color_energy = 80, 80, 200
+
+        if self.energy < 30:
+            self.color_energy = 180, 120, 0
+
+        if self.energy < 10:
+            self.color_energy = 130, 10, 10
 
         surface.blit(energy_render,
                      (60, 772))
@@ -86,6 +91,10 @@ class Player(py.sprite.Sprite):
 
         if self.frame_index > max_frame:
             self.frame_index = 0
+
+    def fireball(self):
+        bullet = Bullet(self.x, (self.y + 20), self)
+        self.bullets.append(bullet)
 
     def draw(self, surface):
 
@@ -116,7 +125,7 @@ class Player(py.sprite.Sprite):
 class Bed(py.sprite.Sprite):
 
     '''
-    If the bed is broken, the game ends. The player can respawn if the bed is still not broken.
+    If the bed is broken, the player can die. The player can not die if the bed is still not broken.
     '''
 
     def __init__(self, x, y, scale):
@@ -137,5 +146,28 @@ class Bed(py.sprite.Sprite):
 
 class Bullet(py.sprite.Sprite):
 
-    def __init__(self, x, y, direction):
-        pass
+    def __init__(self, x, y, player):
+
+        if player.flip == True:
+            self.direction = -1
+            self.flip = True
+
+        else:
+            self.direction = 1
+            self.flip = False
+
+        self.speed = 10
+        self.scale = 3
+        self.x = x
+        self.y = y
+        self.img = py.image.load(
+            "ressources\sprites\characters\\fireball.png").convert_alpha()
+        self.image = py.transform.scale(
+            self.img, (int(self.img.get_width() * self.scale), int(self.img.get_height() * self.scale)))
+
+    def display(self, surface):
+        self.x = self.x + (17 * self.direction)
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        surface.blit(py.transform.flip(
+            self.image, self.flip, False), self.rect)
