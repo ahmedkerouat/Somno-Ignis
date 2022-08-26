@@ -17,6 +17,7 @@ BLACK = 0, 0, 0
 py.init()
 
 window = py.display.set_mode([WIDTH, HEIGHT])
+py.mouse.set_visible(False)
 py.display.set_caption("Bed")
 
 clock = py.time.Clock()
