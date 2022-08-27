@@ -1,6 +1,7 @@
 import pygame as py
 import sys
 from entity import Player
+from entity import Bed
 
 
 # constants
@@ -30,7 +31,8 @@ py.display.set_icon(program_icon)
 # Player
 
 
-player1 = Player(400, 400, 1, 3)
+player1 = Player(200, 400, 1, 3)
+bed = Bed(393, 383, 3)
 
 
 # Controls
@@ -48,40 +50,46 @@ def game_input(last_update, last_update_fire):
         if 50 < player1.energy < 99:
             player1.energy *= 1.001
 
+    player1.collision(bed)
+
     if player1.energy > 10 and player1.attack == False and player1.shoot == False:
 
-        if keys[py.K_d] and player1.x < WIDTH - player1.width // 3:
+        if keys[py.K_d] and player1.x < WIDTH - player1.width and player1.right_move:
             player1.flip = False
+            player1.d_x = 1
             player1.x += 1 * player1.speed
             player1.idle = False
             player1.run = True
             player1.energy -= 0.08
 
-        if keys[py.K_q] and player1.x > player1.width // 3:
+        if keys[py.K_q] and player1.x > player1.width - 10 and player1.left_move:
             player1.flip = True
+            player1.d_x = -1
             player1.x -= 1 * player1.speed
             player1.idle = False
             player1.run = True
             player1.energy -= 0.08
 
-        if keys[py.K_s] and player1.y < HEIGHT - player1.height:
+        if keys[py.K_s] and player1.y < HEIGHT - player1.height and player1.down_move:
             player1.y += 1 * player1.speed
+            player1.d_y = -1
             player1.idle = False
             player1.run = True
             player1.energy -= 0.08
 
-        if keys[py.K_z] and player1.y > player1.height // 3:
+        if keys[py.K_z] and player1.y > player1.height and player1.up_move:
             player1.y -= 1 * player1.speed
+            player1.d_y = 1
             player1.idle = False
             player1.run = True
             player1.energy -= 0.08
 
-    if player1.attack == True and py.time.get_ticks() - last_update >= 192:
+    if player1.attack == True and py.time.get_ticks() - last_update >= 4 * player1.latency:
         last_update = py.time.get_ticks()
         player1.attack = False
         player1.idle = True
 
-    if player1.shoot == True and py.time.get_ticks() - last_update_fire >= 192:
+    if player1.shoot == True and py.time.get_ticks() - last_update_fire >= 4 * player1.latency:
         last_update_fire = py.time.get_ticks()
         player1.shoot = False
         player1.idle = True
@@ -95,6 +103,7 @@ def game_render():
     # window.blit(bg, (0,0))
     window.fill((50, 50, 50))
     points_render = main_font.render(f"Points : {points}", 1, WHITE)
+    bed.draw(window)
     for bullet in player1.bullets:
         bullet.display(window)
         if bullet.x > 800:
@@ -124,17 +133,22 @@ def main():
                 sys.exit()
 
             if event.type == py.KEYUP:
-                if event.key == py.K_a and player1.energy > 10:
+                if event.key == py.K_a and player1.energy > 3:
                     if py.time.get_ticks() - last_update > 300:
+                        bed_points = [bed.rect.midleft, bed.rect.midright]
+                        for bed_point in bed_points:
+                            if player1.rect.collidepoint(bed_point):
+                                player1.x += 100 * player1.d_x
+                                player1.tricks += 1
                         player1.attack = True
-                        player1.energy -= 10
+                        player1.energy -= 3
                         last_update = py.time.get_ticks()
 
-                if event.key == py.K_SPACE and player1.energy > 20:
+                if event.key == py.K_SPACE and player1.energy > 15:
                     if py.time.get_ticks() - last_update_fire > 300:
                         player1.shoot = True
                         player1.fireball()
-                        player1.energy -= 20
+                        player1.energy -= 15
                         last_update_fire = py.time.get_ticks()
 
         game_input(last_update, last_update_fire)
