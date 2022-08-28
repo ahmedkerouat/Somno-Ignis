@@ -223,7 +223,7 @@ class Explosion(py.sprite.Sprite):
         self.y = y
         self.scale = 1
         self.height = self.width = 64
-        self.latency = 30
+        self.latency = 15
         self.frame_index = 0
         self.animation_index = 0
         self.end = False
@@ -263,7 +263,10 @@ class Explosion(py.sprite.Sprite):
 class Enemy(py.sprite.Sprite):
 
     def __init__(self, x, y, scale, speed):
-        pass
+        self.x = x
+        self.y = y
+        self.scale = scale
+        self.speed = speed
 
     def collision(self):
         pass
