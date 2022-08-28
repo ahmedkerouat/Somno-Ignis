@@ -41,6 +41,7 @@ class Player(py.sprite.Sprite):
         self.shoot = False
         self.energy = 100
         self.bullets = []
+        self.explosions = []
         self.frame_index = 0
         self.latency = 50
         self.cooldown_status = 0
@@ -77,10 +78,10 @@ class Player(py.sprite.Sprite):
             f"Energy : {round(self.energy) } %", 1, (255, 255, 255))
 
         if self.energy > 30:
-            self.color_energy = 80, 80, 200
+            self.color_energy = 250, 160, 0
 
         if self.energy < 30:
-            self.color_energy = 180, 120, 0
+            self.color_energy = 250, 105, 0
 
         if self.energy < 10:
             self.color_energy = 130, 10, 10
@@ -106,6 +107,10 @@ class Player(py.sprite.Sprite):
     def fireball(self):
         bullet = Bullet(self.x, (self.y), self)
         self.bullets.append(bullet)
+
+    def explosion_effect(self):
+        self.explosion = Explosion(self.x, self.y)
+        self.explosions.append(self.explosion)
 
     def collision(self, obstacle):
 
@@ -209,6 +214,50 @@ class Bullet(py.sprite.Sprite):
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(
             self.image, self.flip, False), self.rect)
+
+
+class Explosion(py.sprite.Sprite):
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.scale = 1
+        self.height = self.width = 64
+        self.latency = 30
+        self.frame_index = 0
+        self.animation_index = 0
+        self.end = False
+        self.last_update = py.time.get_ticks()
+
+        sprite_sheet_image_explosion = py.image.load(
+            'ressources\sprites\explosion.png').convert_alpha()
+        self.sprite_sheet_explosion = SpriteSheet(sprite_sheet_image_explosion)
+        self.img_explosion = self.sprite_sheet_explosion.get_image(
+            0, 0, self.height, self.width, 3, (0, 0, 0), )
+        self.image = py.transform.scale(
+            self.img_explosion, (int(self.img_explosion.get_width() * self.scale), int(self.img_explosion.get_height() * self.scale)))
+
+    def animation(self):
+        if py.time.get_ticks() - self.last_update >= self.latency:
+            img_explosion = self.sprite_sheet_explosion.get_image(
+                self.frame_index, self.animation_index, self.height, self.width, 3, (0, 0, 0))
+            self.image = py.transform.scale(
+                img_explosion, (int(img_explosion.get_width() * self.scale), int(img_explosion.get_height() * self.scale)))
+            self.frame_index += 1
+            self.last_update = py.time.get_ticks()
+
+        if self.frame_index > 3:
+            self.frame_index = 0
+            self.animation_index += 1
+        if self.animation_index > 3:
+            self.end = True
+
+    def display(self, surface):
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.x, self.y)
+        if self.end == False:
+            surface.blit(py.transform.flip(
+                self.image, False, False), self.rect)
 
 
 class Enemy(py.sprite.Sprite):

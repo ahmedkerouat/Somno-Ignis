@@ -19,7 +19,7 @@ py.init()
 
 window = py.display.set_mode([WIDTH, HEIGHT])
 py.mouse.set_visible(False)
-py.display.set_caption("Bed")
+py.display.set_caption("Somno Ignis")
 
 clock = py.time.Clock()
 main_font = py.font.Font(
@@ -52,7 +52,7 @@ def game_input(last_update, last_update_fire):
 
     player1.collision(bed)
 
-    if player1.energy > 10 and player1.attack == False and player1.shoot == False:
+    if player1.energy > 0 and player1.attack == False and player1.shoot == False:
 
         if keys[py.K_d] and player1.x < WIDTH - player1.width and player1.right_move:
             player1.flip = False
@@ -104,12 +104,19 @@ def game_render():
     window.fill((50, 50, 50))
     points_render = main_font.render(f"Points : {points}", 1, WHITE)
     bed.draw(window)
+
     for bullet in player1.bullets:
         bullet.display(window)
         if bullet.x > 800:
             player1.bullets.remove(bullet)
         if bullet.x < 0:
             player1.bullets.remove(bullet)
+
+    for explosion in player1.explosions:
+        explosion.animation()
+        explosion.display(window)
+        if explosion.end:
+            player1.explosions.remove(explosion)
     player1.draw(window)
     player1.energy_status(window, main_font)
     window.blit(points_render, (10, 10))
@@ -137,9 +144,11 @@ def main():
                     if py.time.get_ticks() - last_update > 300:
                         bed_points = [bed.rect.midleft, bed.rect.midright]
                         for bed_point in bed_points:
-                            if player1.rect.collidepoint(bed_point):
+                            if player1.rect.collidepoint(bed_point) and player1.energy > 30:
                                 player1.x += 100 * player1.d_x
                                 player1.tricks += 1
+                                player1.explosion_effect()
+                                player1.energy -= 30
                         player1.attack = True
                         player1.energy -= 3
                         last_update = py.time.get_ticks()
