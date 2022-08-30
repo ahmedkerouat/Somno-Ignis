@@ -1,4 +1,3 @@
-from xml.etree.ElementInclude import DEFAULT_MAX_INCLUSION_DEPTH
 import pygame as py
 
 
@@ -15,7 +14,7 @@ class SpriteSheet():
 
         img = py.Surface((width, height))
         img.blit(self.sheet, (0, 0), ((frame * width),
-                 (width * animation), width, height))
+                 (height * animation), width, height))
         img = py.transform.scale(img, (width * scale, height * scale))
         img.set_colorkey(colour)  # for the transparency.
 
@@ -151,6 +150,7 @@ class Player(py.sprite.Sprite):
         else:
             self.idle = True
             self.animate(0, 5)
+
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(
             self.image, self.flip, False), self.rect)
@@ -173,8 +173,8 @@ class Bed(py.sprite.Sprite):
             self.img, (int(self.img.get_width() * self.scale), int(self.img.get_height() * self.scale)))
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-        self.rect.w *= 0.8
-        self.rect.h *= 0.7
+        self.rect.w *= 0.9
+        self.rect.h *= 0.9
 
     def is_broken(self):
 
@@ -207,10 +207,10 @@ class Bullet(py.sprite.Sprite):
             "ressources\sprites\characters\\fireball.png").convert_alpha()
         self.image = py.transform.scale(
             self.img, (int(self.img.get_width() * self.scale), int(self.img.get_height() * self.scale)))
+        self.rect = self.image.get_rect()
 
     def display(self, surface):
         self.x = self.x + (17 * self.direction)
-        self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(
             self.image, self.flip, False), self.rect)
@@ -267,9 +267,99 @@ class Enemy(py.sprite.Sprite):
         self.y = y
         self.scale = scale
         self.speed = speed
+        self.alive = True
+        self.move = False
+        self.attack = False
+        self.height = 30
+        self.width = 20
+        self.flip = False
+        self.frame_index = 0
+        self.collide = False
+        self.latency = 60
+        sprite_sheet_image_enemy = py.image.load(
+            'ressources\sprites\characters\dog.png').convert_alpha()
+        self.sprite_sheet_enemy = SpriteSheet(sprite_sheet_image_enemy)
+        self.img_enemy = self.sprite_sheet_enemy.get_image(
+            0, 0, self.height, self.width, 3, (0, 0, 0), )
+        self.image = py.transform.scale(
+            self.img_enemy, (int(self.img_enemy.get_width() * self.scale), int(self.img_enemy.get_height() * self.scale)))
+        self.rect = self.image.get_rect()
+        self.rect.height *= 0.88
+        self.rect.width *= 0.86
+        self.last_update = py.time.get_ticks()
+        self.dead_time = py.time.get_ticks()
 
-    def collision(self):
-        pass
+    def animate(self, animation, max_frame):
 
-    def draw(self):
-        pass
+        if py.time.get_ticks() - self.last_update >= self.latency:
+            img_enemy = self.sprite_sheet_enemy.get_image(
+                self.frame_index, animation, self.height, self.width, 3, (0, 0, 0))
+            self.image = py.transform.scale(
+                img_enemy, (int(img_enemy.get_width() * self.scale), int(img_enemy.get_height() * self.scale)))
+            self.frame_index += 1
+            self.last_update = py.time.get_ticks()
+
+        if self.frame_index > max_frame and self.alive == True:
+            self.frame_index = 0
+        if self.alive == False:
+            self.frame_index = 5
+
+    def collision(self, obstacle):
+        collision_tolerance = 10
+
+        if self.rect.colliderect(obstacle):
+
+            self.collide = True
+
+            if abs(obstacle.rect.top - self.rect.bottom) < collision_tolerance:
+                self.move = True
+                self.x += self.speed
+            if abs(obstacle.rect.bottom - self.rect.top) < collision_tolerance:
+                self.move = True
+                self.x -= self.speed
+            if abs(obstacle.rect.right - self.rect.left) < collision_tolerance:
+                self.move = False
+                self.attack = True
+            if abs(obstacle.rect.left - self.rect.right) < collision_tolerance:
+                self.move = False
+                self.attack = True
+        else:
+            self.collide = False
+
+    def movement(self):
+
+        if self.x < 395:
+            self.x += self.speed
+            self.flip = True
+            self.move = True
+            self.attack = False
+        if self.x > 420:
+            self.x -= self.speed
+            self.flip = False
+            self.move = True
+            self.attack = False
+
+        if self.y < 405:
+            self.y += self.speed
+            self.move = True
+            self.attack = False
+        if self.y > 410:
+            self.y -= self.speed
+            self.move = True
+            self.attack = False
+
+    def draw(self, surface):
+        if self.alive:
+            if self.move == True:
+                self.animate(1, 5)
+            if self.attack == True:
+                self.animate(2, 5)
+            else:
+                self.animate(0, 3)
+
+        else:
+            self.animate(3, 5)
+
+        self.rect.center = (self.x, self.y)
+        surface.blit(py.transform.flip(
+            self.image, self.flip, False), self.rect)

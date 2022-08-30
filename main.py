@@ -1,5 +1,7 @@
 import pygame as py
+import random
 import sys
+from entity import Enemy
 from entity import Player
 from entity import Bed
 
@@ -12,6 +14,10 @@ FPS = 60
 
 WHITE = 255, 255, 255
 BLACK = 0, 0, 0
+
+POSTIONS1 = [(-100, -30), (830, 850)]
+POSITIONS2 = (0, 800)
+RANDOM_LIST = [POSTIONS1, POSITIONS2]
 
 # initializing pygame
 
@@ -32,8 +38,9 @@ py.display.set_icon(program_icon)
 
 
 player1 = Player(200, 400, 1, 3)
+enemies = []
 bed = Bed(393, 383, 3)
-
+update = py.time.get_ticks()
 
 # Controls
 
@@ -102,8 +109,48 @@ points = 0
 def game_render():
     # window.blit(bg, (0,0))
     window.fill((50, 50, 50))
-    points_render = main_font.render(f"Points : {points}", 1, WHITE)
+    global points
+    points = points + 0.01
+    points_render = main_font.render(f"Points : {round(points)}", 1, WHITE)
     bed.draw(window)
+
+    if len(enemies) < round(1 + points//50) < 20:
+        global update
+        if py.time.get_ticks() - update >= (points * (3000//(2 * points + 1))):
+            rng = random.choice(RANDOM_LIST)
+            if rng == POSTIONS1:
+                rng = random.choice(POSTIONS1)
+                u, v = rng
+                w, c = POSITIONS2
+            else:
+                rng = random.choice(POSTIONS1)
+                w, c = rng
+                u, v = POSITIONS2
+
+            dog = Enemy(random.randint(u, v), random.randint(
+                w, c), 1, random.uniform((1 + points//500), (2 + points//500)))
+            enemies.append(dog)
+            update = py.time.get_ticks()
+
+    for enemy in enemies:
+
+        enemy.draw(window)
+
+        def dead():
+            enemy.alive = False
+            enemy.dead_time = py.time.get_ticks()
+
+        for bullet in player1.bullets:
+            if bullet.rect.colliderect(enemy):
+                dead()
+
+        if enemy.alive:
+            enemy.collision(bed)
+            if enemy.collide == False:
+                enemy.movement()
+        elif enemy.frame_index == 5 and py.time.get_ticks() - enemy.dead_time >= 120:
+            points += 10
+            enemies.remove(enemy)
 
     for bullet in player1.bullets:
         bullet.display(window)
@@ -144,7 +191,7 @@ def main():
                     if py.time.get_ticks() - last_update > 300:
                         bed_points = [bed.rect.midleft, bed.rect.midright]
                         for bed_point in bed_points:
-                            if player1.rect.collidepoint(bed_point) and player1.energy > 30:
+                            if player1.rect.collidepoint(bed_point) and player1.energy > 33:
                                 player1.x += 100 * player1.d_x
                                 player1.tricks += 1
                                 player1.explosion_effect()
