@@ -36,8 +36,11 @@ class Player(py.sprite.Sprite):
         self.flip = False
         self.idle = True
         self.run = False
+        self.collide = False
         self.attack = False
         self.shoot = False
+        self.killable = False
+        self.alive = True
         self.energy = 100
         self.bullets = []
         self.explosions = []
@@ -118,18 +121,23 @@ class Player(py.sprite.Sprite):
         self.up_move = True
         self.left_move = True
         self.right_move = True
+        self.collide = False
         collision_tolerance = 10
 
         if self.rect.colliderect(obstacle):
 
             if abs(obstacle.rect.top - self.rect.bottom) < collision_tolerance:
                 self.down_move = False
+                self.collide = True
             if abs(obstacle.rect.bottom - self.rect.top) < collision_tolerance:
                 self.up_move = False
+                self.collide = True
             if abs(obstacle.rect.right - self.rect.left) < collision_tolerance:
                 self.left_move = False
+                self.collide = True
             if abs(obstacle.rect.left - self.rect.right) < collision_tolerance:
                 self.right_move = False
+                self.collide = True
 
     def draw(self, surface):
 
@@ -167,6 +175,8 @@ class Bed(py.sprite.Sprite):
         self.x = x
         self.y = y
         self.scale = scale
+        self.destruction_points = 0
+        self.broken = False
         self.img = py.image.load(
             "ressources\sprites\\bed.png").convert_alpha()
         self.image = py.transform.scale(
@@ -178,11 +188,22 @@ class Bed(py.sprite.Sprite):
 
     def is_broken(self):
 
-        pass
+        if self.destruction_points >= 100:
+            self.broken = True
 
-    def draw(self, surface):
+    def draw(self, surface, font):
 
         # Method used for displaying the bed on the screen.
+
+        if self.destruction_points > 0:
+            py.draw.rect(surface, (130, 10, 10), py.Rect(
+                590, 770, ((self.destruction_points) * 2), 18), 0, 3)
+            py.draw.rect(surface, (130, 10, 10), py.Rect(
+                590, 770, (100 * 2), 18), 2, 3)
+            bed_status = font.render(
+                f"Bed broken : {round(self.destruction_points) } %", 1, (255, 255, 255))
+            surface.blit(bed_status,
+                         (633, 772))
         surface.blit(py.transform.flip(
             self.image, False, False), self.rect)
 
@@ -262,7 +283,7 @@ class Explosion(py.sprite.Sprite):
 
 class Enemy(py.sprite.Sprite):
 
-    def __init__(self, x, y, scale, speed):
+    def __init__(self, name,  x, y, scale, height, width, speed, life_points, substract):
         self.x = x
         self.y = y
         self.scale = scale
@@ -270,14 +291,19 @@ class Enemy(py.sprite.Sprite):
         self.alive = True
         self.move = False
         self.attack = False
-        self.height = 30
-        self.width = 20
+        self.hit = False
+        self.substract = substract
+        self.life_points = life_points
+        self.height = height
+        self.width = width
         self.flip = False
         self.frame_index = 0
         self.collide = False
         self.latency = 60
+        self.dist1 = 0
+        self.dist2 = 0
         sprite_sheet_image_enemy = py.image.load(
-            'ressources\sprites\characters\dog.png').convert_alpha()
+            "ressources\sprites\characters\\" + name + ".png").convert_alpha()
         self.sprite_sheet_enemy = SpriteSheet(sprite_sheet_image_enemy)
         self.img_enemy = self.sprite_sheet_enemy.get_image(
             0, 0, self.height, self.width, 3, (0, 0, 0), )
@@ -287,6 +313,7 @@ class Enemy(py.sprite.Sprite):
         self.rect.height *= 0.88
         self.rect.width *= 0.86
         self.last_update = py.time.get_ticks()
+        self.hit_time = py.time.get_ticks()
         self.dead_time = py.time.get_ticks()
 
     def animate(self, animation, max_frame):
@@ -302,7 +329,7 @@ class Enemy(py.sprite.Sprite):
         if self.frame_index > max_frame and self.alive == True:
             self.frame_index = 0
         if self.alive == False:
-            self.frame_index = 5
+            self.frame_index = 5 - self.substract
 
     def collision(self, obstacle):
         collision_tolerance = 10
@@ -313,10 +340,10 @@ class Enemy(py.sprite.Sprite):
 
             if abs(obstacle.rect.top - self.rect.bottom) < collision_tolerance:
                 self.move = True
-                self.x += self.speed
+                self.x += self.speed * 3
             if abs(obstacle.rect.bottom - self.rect.top) < collision_tolerance:
                 self.move = True
-                self.x -= self.speed
+                self.x -= self.speed * 3
             if abs(obstacle.rect.right - self.rect.left) < collision_tolerance:
                 self.move = False
                 self.attack = True
@@ -325,40 +352,46 @@ class Enemy(py.sprite.Sprite):
                 self.attack = True
         else:
             self.collide = False
+            self.attack = False
 
-    def movement(self):
+    def dead(self):
+        self.alive = False
+        self.dead_time = py.time.get_ticks()
 
-        if self.x < 395:
+    def movement(self, x1, x2, y1, y2):
+
+        if self.x < x1:
             self.x += self.speed
             self.flip = True
             self.move = True
             self.attack = False
-        if self.x > 420:
+        if self.x > x2:
             self.x -= self.speed
             self.flip = False
             self.move = True
             self.attack = False
 
-        if self.y < 405:
+        if self.y < y1:
             self.y += self.speed
             self.move = True
             self.attack = False
-        if self.y > 410:
+        if self.y > y2:
             self.y -= self.speed
             self.move = True
             self.attack = False
 
     def draw(self, surface):
-        if self.alive:
+        if self.hit == True:
+            self.animate(4, 1)
+        if self.alive and self.hit == False:
             if self.move == True:
-                self.animate(1, 5)
+                self.animate(1, 5 - self.substract)
             if self.attack == True:
-                self.animate(2, 5)
+                self.animate(2, 5 - self.substract)
             else:
                 self.animate(0, 3)
-
         else:
-            self.animate(3, 5)
+            self.animate(3, 5 - self.substract)
 
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(

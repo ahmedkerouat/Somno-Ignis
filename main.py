@@ -18,10 +18,13 @@ BLACK = 0, 0, 0
 POSTIONS1 = [(-100, -30), (830, 850)]
 POSITIONS2 = (0, 800)
 RANDOM_LIST = [POSTIONS1, POSITIONS2]
+ENEMY_TYPES = ["dog", "scorpio"]
 
 # initializing pygame
 
 py.init()
+
+# requirements
 
 window = py.display.set_mode([WIDTH, HEIGHT])
 py.mouse.set_visible(False)
@@ -32,14 +35,16 @@ main_font = py.font.Font(
     "ressources\mainfont.ttf", 16)
 program_icon = py.image.load("ressources\sprites\\bed.png")
 py.display.set_icon(program_icon)
+points = 0
 
-
-# Player
+# Objects
 
 
 player1 = Player(200, 400, 1, 3)
 enemies = []
-bed = Bed(393, 383, 3)
+beds = []
+bed1 = Bed(393, 383, 3)
+beds.append(bed1)
 update = py.time.get_ticks()
 
 # Controls
@@ -56,8 +61,6 @@ def game_input(last_update, last_update_fire):
             player1.energy += 0.1
         if 50 < player1.energy < 99:
             player1.energy *= 1.001
-
-    player1.collision(bed)
 
     if player1.energy > 0 and player1.attack == False and player1.shoot == False:
 
@@ -103,8 +106,6 @@ def game_input(last_update, last_update_fire):
 
 
 # rendering the game
-points = 0
-
 
 def game_render():
     # window.blit(bg, (0,0))
@@ -112,11 +113,12 @@ def game_render():
     global points
     points = points + 0.01
     points_render = main_font.render(f"Points : {round(points)}", 1, WHITE)
-    bed.draw(window)
+    player1.draw(window)
 
-    if len(enemies) < round(1 + points//50) < 20:
+    if len(enemies) < round(1 + points//50) < 50:
         global update
         if py.time.get_ticks() - update >= (points * (3000//(2 * points + 1))):
+            enemy_type = random.choice(ENEMY_TYPES)
             rng = random.choice(RANDOM_LIST)
             if rng == POSTIONS1:
                 rng = random.choice(POSTIONS1)
@@ -127,30 +129,48 @@ def game_render():
                 w, c = rng
                 u, v = POSITIONS2
 
-            dog = Enemy(random.randint(u, v), random.randint(
-                w, c), 1, random.uniform((1 + points//500), (2 + points//500)))
-            enemies.append(dog)
+            if enemy_type == "dog":
+                dog = Enemy("dog", random.randint(u, v), random.randint(
+                    w, c), 1, 30, 20, random.uniform((2 + points//500), (2.5 + points//500)), 100, 0)
+                enemies.append(dog)
+            elif enemy_type == "scorpio":
+                scorpio = Enemy("scorpio", random.randint(u, v), random.randint(
+                    w, c), 1, 24, 19, random.uniform((0.5 + points//500), (1 + points//500)), 160, 2)
+                enemies.append(scorpio)
             update = py.time.get_ticks()
 
     for enemy in enemies:
 
         enemy.draw(window)
-
-        def dead():
-            enemy.alive = False
-            enemy.dead_time = py.time.get_ticks()
-
         for bullet in player1.bullets:
             if bullet.rect.colliderect(enemy):
-                dead()
+                enemy.dead()
 
-        if enemy.alive:
-            enemy.collision(bed)
-            if enemy.collide == False:
-                enemy.movement()
-        elif enemy.frame_index == 5 and py.time.get_ticks() - enemy.dead_time >= 120:
+        if py.time.get_ticks() - enemy.hit_time > 100 and enemy.hit == True:
+            enemy.hit = False
+
+        if enemy.alive and enemy.hit == False:
+            if player1.killable == False:
+                for bed in beds:
+                    enemy.collision(bed)
+                    if enemy.attack == True:
+                        bed.destruction_points += 0.1 + (points//1000)
+                if enemy.collide == False:
+                    enemy.movement(395, 420, 405, 410)
+            else:
+                enemy.collision(player1)
+                if enemy.collide == True and enemy.attack == True:
+                    player1.energy -= 0.1
+                    player1.alive = False
+                else:
+                    enemy.movement(player1.x - 2, player1.x + 2,
+                                   player1.y - 2, player1.y + 2)
+        elif enemy.frame_index == 5 - enemy.substract and py.time.get_ticks() - enemy.dead_time >= 300:
             points += 10
             enemies.remove(enemy)
+            for bed in beds:
+                if bed.destruction_points > 0:
+                    bed.destruction_points -= 1
 
     for bullet in player1.bullets:
         bullet.display(window)
@@ -164,10 +184,14 @@ def game_render():
         explosion.display(window)
         if explosion.end:
             player1.explosions.remove(explosion)
-    player1.draw(window)
     player1.energy_status(window, main_font)
+    for bed in beds:
+        player1.collision(bed)
+        bed.draw(window, main_font)
+        if bed.destruction_points >= 100:
+            beds.remove(bed)
+            player1.killable = True
     window.blit(points_render, (10, 10))
-    # other things to blit.
     py.display.update()
 
 # main
@@ -189,14 +213,22 @@ def main():
             if event.type == py.KEYUP:
                 if event.key == py.K_a and player1.energy > 3:
                     if py.time.get_ticks() - last_update > 300:
-                        bed_points = [bed.rect.midleft, bed.rect.midright]
-                        for bed_point in bed_points:
-                            if player1.rect.collidepoint(bed_point) and player1.energy > 33:
-                                player1.x += 100 * player1.d_x
-                                player1.tricks += 1
-                                player1.explosion_effect()
-                                player1.energy -= 30
+                        for bed in beds:
+                            bed_points = [bed.rect.midleft, bed.rect.midright]
+                            for bed_point in bed_points:
+                                if player1.rect.collidepoint(bed_point) and player1.energy > 33:
+                                    player1.x += 100 * player1.d_x
+                                    player1.tricks += 1
+                                    player1.explosion_effect()
+                                    player1.energy -= 30
                         player1.attack = True
+                        for enemy in enemies:
+                            if player1.rect.colliderect(enemy.rect) and player1.attack == True:
+                                enemy.life_points -= 60
+                                enemy.hit = True
+                                enemy.hit_time = py.time.get_ticks()
+                                if enemy.life_points < 0:
+                                    enemy.dead()
                         player1.energy -= 3
                         last_update = py.time.get_ticks()
 
