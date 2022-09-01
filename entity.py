@@ -40,6 +40,7 @@ class Player(py.sprite.Sprite):
         self.attack = False
         self.shoot = False
         self.killable = False
+        self.life_points = 100
         self.alive = True
         self.energy = 100
         self.bullets = []
@@ -138,6 +139,21 @@ class Player(py.sprite.Sprite):
             if abs(obstacle.rect.left - self.rect.right) < collision_tolerance:
                 self.right_move = False
                 self.collide = True
+
+    def check_if_dead(self):
+
+        if self.life_points < 0:
+            self.alive = False
+
+    def life_points_display(self, surface, font):
+        py.draw.rect(surface, (130, 10, 10), py.Rect(
+            590, 770, ((self.life_points) * 2), 18), 0, 3)
+        py.draw.rect(surface, (130, 10, 10), py.Rect(
+            590, 770, (100 * 2), 18), 2, 3)
+        life_render = font.render(
+            f"Health: {round(self.life_points) } %", 1, (255, 255, 255))
+        surface.blit(life_render,
+                     (650, 772))
 
     def draw(self, surface):
 
@@ -257,6 +273,7 @@ class Explosion(py.sprite.Sprite):
             0, 0, self.height, self.width, 3, (0, 0, 0), )
         self.image = py.transform.scale(
             self.img_explosion, (int(self.img_explosion.get_width() * self.scale), int(self.img_explosion.get_height() * self.scale)))
+        self.rect = self.image.get_rect()
 
     def animation(self):
         if py.time.get_ticks() - self.last_update >= self.latency:
@@ -283,7 +300,7 @@ class Explosion(py.sprite.Sprite):
 
 class Enemy(py.sprite.Sprite):
 
-    def __init__(self, name,  x, y, scale, height, width, speed, life_points, substract):
+    def __init__(self, name,  x, y, scale, height, width, speed, life_points, substract, add):
         self.x = x
         self.y = y
         self.scale = scale
@@ -293,6 +310,7 @@ class Enemy(py.sprite.Sprite):
         self.attack = False
         self.hit = False
         self.substract = substract
+        self.add = add
         self.life_points = life_points
         self.height = height
         self.width = width
@@ -387,11 +405,11 @@ class Enemy(py.sprite.Sprite):
             if self.move == True:
                 self.animate(1, 5 - self.substract)
             if self.attack == True:
-                self.animate(2, 5 - self.substract)
+                self.animate(2, 5 - self.add)
             else:
                 self.animate(0, 3)
         else:
-            self.animate(3, 5 - self.substract)
+            self.animate(3, 5 - self.add)
 
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(
