@@ -3,8 +3,10 @@ import pygame as py
 
 class Interface():
 
-    def __init__(self, font):
+    def __init__(self, font, highscore, highscore_font):
         self.font = font
+        self.highscore = highscore
+        self.highscore_font = highscore_font
         self.mx = 0
         self.my = 0
         self.clicked1 = False
@@ -14,6 +16,12 @@ class Interface():
         logo_unscaled = py.image.load("ressources\sprites\\gamelogo.png")
         self.logo = py.transform.scale(logo_unscaled, (int(
             logo_unscaled.get_width() * 3), int(logo_unscaled.get_height() * 3)))
+
+    def update_highscore(self, highscore):
+        self.highscore_render = self.highscore_font.render(
+            ("Highscore : " + str(self.highscore)), 1, (200, 100, 0))
+        self.highscore_width = self.highscore_render.get_width()
+        self.highscore = highscore
 
     def display(self, surface):
         self.mx, self.my = py.mouse.get_pos()
@@ -39,6 +47,8 @@ class Interface():
                 self.clicked2 = True
         else:
             self.color2 = (20, 0, 46)
+        surface.blit(self.highscore_render,
+                     (400 - (self.highscore_width // 2), 125))
 
 
 class Button():

@@ -1,3 +1,4 @@
+from glob import glob
 import pygame as py
 import random
 import sys
@@ -6,6 +7,8 @@ from entity import Player
 from entity import Bed
 from menu import Interface
 
+# initializing pygame
+py.init()
 
 # constants
 
@@ -16,30 +19,51 @@ FPS = 60
 WHITE = 255, 255, 255
 BLACK = 0, 0, 0
 
+# the enemies can spawn randomly on each of the 4 sides of the window
 POSTIONS1 = [(-100, -30), (830, 850)]
 POSITIONS2 = (0, 800)
 RANDOM_LIST = [POSTIONS1, POSITIONS2]
 ENEMY_TYPES = ["dog", "scorpio", "dog", "scorpio", "skeleton"]
-
-# initializing pygame
-py.init()
-
-# requirements
-
-window = py.display.set_mode([WIDTH, HEIGHT])
-py.display.set_caption("Somno Ignis")
+# game variables
 
 clock = py.time.Clock()
 main_font = py.font.Font(
     "ressources\mainfont.ttf", 16)
 font = py.font.Font(
     "ressources\mainfont.ttf", 32)
+
+# loading images
 program_icon = py.image.load("ressources\sprites\\icon.png")
 bg = py.image.load("ressources\sprites\\bg.png")
+
+
+# Setting up the game
+window = py.display.set_mode([WIDTH, HEIGHT])
+py.display.set_caption("Somno Ignis")
 py.display.set_icon(program_icon)
 
-# Objects
+# highscore
 
+
+def get_highscore():
+    file = open("data.txt", "a")
+    file.close
+    file = open("data.txt", "r")
+    highscore = file.read()
+    if highscore == "":
+        highscore = 0
+        file = open("data.txt", "w")
+        file.write(str(highscore))
+        file.close
+    elif int(highscore) >= 0:
+        file.close
+    return highscore
+
+
+highscore = get_highscore()
+
+# creating the menu
+interface = Interface(font, highscore, main_font)
 
 # Controls
 
@@ -194,11 +218,16 @@ def game_render(player1, enemies, update, beds):
         if explosion.end:
             player1.explosions.remove(explosion)
     player1.energy_status(window, main_font)
+
     for bed in beds:
         player1.collision(bed)
         bed.draw(window, main_font)
         if bed.destruction_points >= 100:
             player1.killable = True
+            if points > int(highscore):
+                file = open("data.txt", "w")
+                file.write(str(round(points)))
+                file.close
             player1.dead_time = py.time.get_ticks()
             beds.remove(bed)
     window.blit(points_render, (10, 10))
@@ -212,8 +241,6 @@ def main():
     run = True
     launch = True
     game = False
-    interface = Interface(font)
-
     while run:
         clock.tick(FPS)
 
@@ -239,6 +266,8 @@ def main():
                 game = False
 
         if game == False:
+            highscore = get_highscore()
+            interface.update_highscore(highscore)
             interface.display(window)
             if interface.clicked1:
                 game = True
@@ -252,35 +281,36 @@ def main():
             if event.type == py.QUIT:
                 run = False
                 sys.exit()
+            if game:
+                if event.type == py.KEYUP and player1.alive:
+                    if event.key == py.K_a and player1.energy > 3:
+                        if py.time.get_ticks() - last_update > 300:
+                            for bed in beds:
+                                bed_points = [
+                                    bed.rect.midleft, bed.rect.midright]
+                                for bed_point in bed_points:
+                                    if player1.rect.collidepoint(bed_point) and player1.energy > 33:
+                                        player1.x += 100 * player1.d_x
+                                        player1.tricks += 1
+                                        player1.explosion_effect()
+                                        player1.energy -= 30
+                            player1.attack = True
+                            for enemy in enemies:
+                                if player1.rect.colliderect(enemy.rect) and player1.attack == True:
+                                    enemy.life_points -= 60
+                                    enemy.hit = True
+                                    enemy.hit_time = py.time.get_ticks()
+                                    if enemy.life_points < 0:
+                                        enemy.dead()
+                            player1.energy -= 3
+                            last_update = py.time.get_ticks()
 
-            if event.type == py.KEYUP and player1.alive:
-                if event.key == py.K_a and player1.energy > 3:
-                    if py.time.get_ticks() - last_update > 300:
-                        for bed in beds:
-                            bed_points = [bed.rect.midleft, bed.rect.midright]
-                            for bed_point in bed_points:
-                                if player1.rect.collidepoint(bed_point) and player1.energy > 33:
-                                    player1.x += 100 * player1.d_x
-                                    player1.tricks += 1
-                                    player1.explosion_effect()
-                                    player1.energy -= 30
-                        player1.attack = True
-                        for enemy in enemies:
-                            if player1.rect.colliderect(enemy.rect) and player1.attack == True:
-                                enemy.life_points -= 60
-                                enemy.hit = True
-                                enemy.hit_time = py.time.get_ticks()
-                                if enemy.life_points < 0:
-                                    enemy.dead()
-                        player1.energy -= 3
-                        last_update = py.time.get_ticks()
-
-                if event.key == py.K_SPACE and player1.energy > 15:
-                    if py.time.get_ticks() - last_update_fire > 300:
-                        player1.shoot = True
-                        player1.fireball()
-                        player1.energy -= 15
-                        last_update_fire = py.time.get_ticks()
+                    if event.key == py.K_SPACE and player1.energy > 15:
+                        if py.time.get_ticks() - last_update_fire > 300:
+                            player1.shoot = True
+                            player1.fireball()
+                            player1.energy -= 15
+                            last_update_fire = py.time.get_ticks()
 
 
 if __name__ == "__main__":
