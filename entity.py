@@ -120,7 +120,6 @@ class Player(py.sprite.Sprite):
 
     def check_if_dead(self):
         if self.killable:
-            fade += 1
             if self.frame_index >= 2 and py.time.get_ticks() - self.dead_time >= 600:
                 self.alive = False
 
@@ -181,7 +180,7 @@ class Player(py.sprite.Sprite):
 class Bed(py.sprite.Sprite):
 
     '''
-    If the bed is broken, the player can die. The player can not die if the bed is still not broken.
+    If the bed is broken, the player dies. 
     '''
 
     def __init__(self, x, y, scale):
@@ -201,6 +200,8 @@ class Bed(py.sprite.Sprite):
         self.rect.h *= 0.9
 
     def is_broken(self):
+
+        # Method used to check if the bed is broken or not
 
         if self.destruction_points >= 100:
             self.broken = True
