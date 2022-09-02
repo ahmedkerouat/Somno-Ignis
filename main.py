@@ -4,6 +4,7 @@ import sys
 from entity import Enemy
 from entity import Player
 from entity import Bed
+from menu import Interface
 
 
 # constants
@@ -18,11 +19,9 @@ BLACK = 0, 0, 0
 POSTIONS1 = [(-100, -30), (830, 850)]
 POSITIONS2 = (0, 800)
 RANDOM_LIST = [POSTIONS1, POSITIONS2]
-ENEMY_TYPES = ["dog", "scorpio", "dog",
-               "scorpio", "scorpio", "skeleton"]
+ENEMY_TYPES = ["dog", "scorpio", "dog", "scorpio", "skeleton"]
 
 # initializing pygame
-
 py.init()
 
 # requirements
@@ -36,28 +35,16 @@ main_font = py.font.Font(
 font = py.font.Font(
     "ressources\mainfont.ttf", 32)
 program_icon = py.image.load("ressources\sprites\\icon.png")
-logo_unscaled = py.image.load("ressources\sprites\\gamelogo.png")
 bg = py.image.load("ressources\sprites\\bg.png")
-logo = py.transform.scale(logo_unscaled, (int(
-    logo_unscaled.get_width() * 3), int(logo_unscaled.get_height() * 3)))
 py.display.set_icon(program_icon)
-click = False
-points = 0
 
 # Objects
 
 
-player1 = Player(200, 400, 1, 3)
-enemies = []
-beds = []
-bed1 = Bed(393, 383, 3)
-beds.append(bed1)
-update = py.time.get_ticks()
-
 # Controls
 
 
-def game_input(last_update, last_update_fire):
+def game_input(last_update, last_update_fire, player1):
     keys = py.key.get_pressed()
 
     player1.idle == True
@@ -114,7 +101,7 @@ def game_input(last_update, last_update_fire):
 
 # rendering the game
 
-def game_render():
+def game_render(player1, enemies, update, beds):
     window.blit(bg, (0, 0))
     py.mouse.set_visible(False)
     global points
@@ -122,8 +109,7 @@ def game_render():
     points_render = main_font.render(f"Points : {round(points)}", 1, WHITE)
     player1.draw(window)
 
-    if len(enemies) < round(1 + points//50) < 50:
-        global update
+    if len(enemies) < round(1 + points//100) < 50:
         if py.time.get_ticks() - update >= (points * (3000//(2 * points + 1))):
             enemy_type = random.choice(ENEMY_TYPES)
             rng = random.choice(RANDOM_LIST)
@@ -182,9 +168,9 @@ def game_render():
                     enemy.movement(395, 420, 405, 410)
             else:
                 enemy.collision(player1)
-                if enemy.collide == True and enemy.attack == True and player1.life_points > 0:
-                    player1.energy -= 0.1
-                    player1.life_points -= 3 * (points/500)
+                if enemy.collide == True and enemy.attack == True:
+                    if player1.energy > 0.2:
+                        player1.energy -= 0.1
                 else:
                     enemy.movement(player1.x - 2, player1.x + 2,
                                    player1.y - 2, player1.y + 2)
@@ -212,11 +198,11 @@ def game_render():
         player1.collision(bed)
         bed.draw(window, main_font)
         if bed.destruction_points >= 100:
-            beds.remove(bed)
             player1.killable = True
+            player1.dead_time = py.time.get_ticks()
+            beds.remove(bed)
     window.blit(points_render, (10, 10))
-    if player1.life_points < 100 and player1.alive:
-        player1.life_points_display(window, main_font)
+
     py.display.update()
 
 # main
@@ -224,20 +210,42 @@ def game_render():
 
 def main():
     run = True
-    last_update = py.time.get_ticks()
-    last_update_fire = py.time.get_ticks()
+    launch = True
+    game = False
+    interface = Interface(font)
 
     while run:
         clock.tick(FPS)
 
-        if player1.alive == False:
-            py.mouse.set_visible(True)
-            mx, my = py.mouse.get_pos()
-            window.fill((11, 0, 19))
-            window.blit(logo, (200, 0))
-            button1 = font.render("PLAY", 1, WHITE)
-            button1_rect = button1.get_rect()
-            window.blit(button1, (374, 400))
+        if game:
+            if launch:
+                global points
+                points = 0
+                last_update = py.time.get_ticks()
+                last_update_fire = py.time.get_ticks()
+                player1 = Player(200, 400, 1, 3)
+                enemies = []
+                beds = []
+                bed1 = Bed(393, 383, 3)
+                beds.append(bed1)
+                update = py.time.get_ticks()
+                launch = False
+            game_input(last_update, last_update_fire, player1)
+            game_render(player1, enemies, update, beds)
+            player1.check_if_dead()
+
+            if player1.alive == False:
+                launch = True
+                game = False
+
+        if game == False:
+            interface.display(window)
+            if interface.clicked1:
+                game = True
+                interface.clicked1 = False
+            if interface.clicked2:
+                run = False
+
             py.display.update()
 
         for event in py.event.get():
@@ -273,10 +281,6 @@ def main():
                         player1.fireball()
                         player1.energy -= 15
                         last_update_fire = py.time.get_ticks()
-        if player1.alive:
-            game_input(last_update, last_update_fire)
-            game_render()
-            player1.check_if_dead()
 
 
 if __name__ == "__main__":

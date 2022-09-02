@@ -70,6 +70,7 @@ class Player(py.sprite.Sprite):
         self.rect.height *= 0.98
 
         self.last_update = py.time.get_ticks()
+        self.dead_time = py.time.get_ticks()
 
     def energy_status(self, surface, font):
 
@@ -104,8 +105,10 @@ class Player(py.sprite.Sprite):
             self.frame_index += 1
             self.last_update = py.time.get_ticks()
 
-        if self.frame_index > max_frame:
+        if self.frame_index > max_frame and self.killable == False:
             self.frame_index = 0
+        elif self.frame_index > max_frame and self.killable:
+            self.frame_index = 2
 
     def fireball(self):
         bullet = Bullet(self.x, (self.y), self)
@@ -114,6 +117,12 @@ class Player(py.sprite.Sprite):
     def explosion_effect(self):
         self.explosion = Explosion(self.x, self.y)
         self.explosions.append(self.explosion)
+
+    def check_if_dead(self):
+        if self.killable:
+            fade += 1
+            if self.frame_index >= 2 and py.time.get_ticks() - self.dead_time >= 600:
+                self.alive = False
 
     def collision(self, obstacle):
 
@@ -140,40 +149,29 @@ class Player(py.sprite.Sprite):
                 self.right_move = False
                 self.collide = True
 
-    def check_if_dead(self):
-
-        if self.life_points < 0:
-            self.alive = False
-
-    def life_points_display(self, surface, font):
-        py.draw.rect(surface, (130, 10, 10), py.Rect(
-            590, 770, ((self.life_points) * 2), 18), 0, 3)
-        py.draw.rect(surface, (130, 10, 10), py.Rect(
-            590, 770, (100 * 2), 18), 2, 3)
-        life_render = font.render(
-            f"Health: {round(self.life_points) } %", 1, (255, 255, 255))
-        surface.blit(life_render,
-                     (650, 772))
-
     def draw(self, surface):
 
         # Method used for displaying the Player on the screen.
 
-        if self.attack == True:
-            self.idle = False
-            self.animate(2, 3)
+        if self.killable == False:
 
-        if self.run == True:
-            self.idle = False
-            self.animate(1, 5)
+            if self.attack == True:
+                self.idle = False
+                self.animate(2, 3)
 
-        if self.shoot == True:
-            self.idle = False
-            self.animate(3, 3)
+            if self.run == True:
+                self.idle = False
+                self.animate(1, 5)
 
+            if self.shoot == True:
+                self.idle = False
+                self.animate(3, 3)
+
+            else:
+                self.idle = True
+                self.animate(0, 5)
         else:
-            self.idle = True
-            self.animate(0, 5)
+            self.animate(4, 2)
 
         self.rect.center = (self.x, self.y)
         surface.blit(py.transform.flip(
