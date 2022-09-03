@@ -1,4 +1,3 @@
-from glob import glob
 import pygame as py
 import random
 import sys
@@ -9,6 +8,8 @@ from menu import Interface
 
 # initializing pygame
 py.init()
+py.mixer.pre_init(frequency=44100, size=-16, channels=1, buffer=512)
+py.mixer.init()
 
 # constants
 
@@ -32,10 +33,13 @@ main_font = py.font.Font(
 font = py.font.Font(
     "ressources\mainfont.ttf", 32)
 
+
 # loading images
 program_icon = py.image.load("ressources\sprites\\icon.png")
 bg = py.image.load("ressources\sprites\\bg.png")
 
+# loading sounds & music
+click_sound = py.mixer.Sound("ressources\music & sounds\click.wav")
 
 # Setting up the game
 window = py.display.set_mode([WIDTH, HEIGHT])
@@ -80,7 +84,7 @@ def game_input(last_update, last_update_fire, player1):
         if 50 < player1.energy < 99:
             player1.energy *= 1.001
 
-    if player1.energy > 0 and player1.attack == False and player1.shoot == False:
+    if player1.energy > 0 and player1.attack == False and player1.shoot == False and player1.killable == False:
 
         if keys[py.K_d] and player1.x < WIDTH - player1.width and player1.right_move:
             player1.flip = False
@@ -270,6 +274,7 @@ def main():
             interface.update_highscore(highscore)
             interface.display(window)
             if interface.clicked1:
+                click_sound.play()
                 game = True
                 interface.clicked1 = False
             if interface.clicked2:
