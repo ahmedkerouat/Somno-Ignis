@@ -6,9 +6,8 @@ from entity import Player
 from entity import Bed
 from menu import Interface
 
-# initializing pygame
+# initializing pygame & the mixer
 py.init()
-py.mixer.pre_init(frequency=44100, size=-16, channels=1, buffer=512)
 py.mixer.init()
 
 # constants
@@ -25,13 +24,15 @@ POSTIONS1 = [(-100, -30), (830, 850)]
 POSITIONS2 = (0, 800)
 RANDOM_LIST = [POSTIONS1, POSITIONS2]
 ENEMY_TYPES = ["dog", "scorpio", "dog", "scorpio", "skeleton"]
-# game variables
 
+# game variables
 clock = py.time.Clock()
 main_font = py.font.Font(
     "ressources\mainfont.ttf", 16)
 font = py.font.Font(
     "ressources\mainfont.ttf", 32)
+max_volume_music = 0.1
+max_volume_sounds = 0.1
 
 
 # loading images
@@ -39,7 +40,20 @@ program_icon = py.image.load("ressources\sprites\\icon.png")
 bg = py.image.load("ressources\sprites\\bg.png")
 
 # loading sounds & music
+
+py.mixer.music.load("ressources\music & sounds\ost.mp3")
 click_sound = py.mixer.Sound("ressources\music & sounds\click.wav")
+player_attack_sound = py.mixer.Sound(
+    "ressources\music & sounds\player_attack.wav")
+bullet_sound = py.mixer.Sound("ressources\music & sounds\\bullet.wav")
+game_over_sound = py.mixer.Sound("ressources\music & sounds\\game_over.wav")
+
+sound_list = [click_sound, player_attack_sound, bullet_sound, game_over_sound]
+for sound in sound_list:
+    sound.set_volume(max_volume_sounds)
+# playing the music
+py.mixer.music.set_volume(max_volume_music)
+py.mixer.music.play(-1)
 
 # Setting up the game
 window = py.display.set_mode([WIDTH, HEIGHT])
@@ -228,6 +242,7 @@ def game_render(player1, enemies, update, beds):
         bed.draw(window, main_font)
         if bed.destruction_points >= 100:
             player1.killable = True
+            game_over_sound.play()
             if points > int(highscore):
                 file = open("data.txt", "w")
                 file.write(str(round(points)))
@@ -300,6 +315,7 @@ def main():
                                         player1.explosion_effect()
                                         player1.energy -= 30
                             player1.attack = True
+                            player_attack_sound.play()
                             for enemy in enemies:
                                 if player1.rect.colliderect(enemy.rect) and player1.attack == True:
                                     enemy.life_points -= 60
@@ -313,6 +329,7 @@ def main():
                     if event.key == py.K_SPACE and player1.energy > 15:
                         if py.time.get_ticks() - last_update_fire > 300:
                             player1.shoot = True
+                            bullet_sound.play()
                             player1.fireball()
                             player1.energy -= 15
                             last_update_fire = py.time.get_ticks()
