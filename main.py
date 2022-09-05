@@ -1,11 +1,11 @@
 import pygame as py
+import webbrowser
 import random
 import sys
 from entity import Enemy
 from entity import Player
 from entity import Bed
 from menu import Interface
-
 # initializing pygame & the mixer
 py.init()
 py.mixer.init()
@@ -46,9 +46,14 @@ click_sound = py.mixer.Sound("ressources\music & sounds\click.wav")
 player_attack_sound = py.mixer.Sound(
     "ressources\music & sounds\player_attack.wav")
 bullet_sound = py.mixer.Sound("ressources\music & sounds\\bullet.wav")
+bed_destroyed_sound = py.mixer.Sound(
+    "ressources\music & sounds\\bed_destroyed.wav")
+explosion_sound = py.mixer.Sound(
+    "ressources\music & sounds\\explosion.wav")
 game_over_sound = py.mixer.Sound("ressources\music & sounds\\game_over.wav")
 
-sound_list = [click_sound, player_attack_sound, bullet_sound, game_over_sound]
+sound_list = [click_sound, player_attack_sound,
+              bullet_sound, game_over_sound, bed_destroyed_sound, explosion_sound]
 for sound in sound_list:
     sound.set_volume(max_volume_sounds)
 # playing the music
@@ -233,6 +238,7 @@ def game_render(player1, enemies, update, beds):
     for explosion in player1.explosions:
         explosion.animation()
         explosion.display(window)
+        explosion_sound.play()
         if explosion.end:
             player1.explosions.remove(explosion)
     player1.energy_status(window, main_font)
@@ -241,6 +247,7 @@ def game_render(player1, enemies, update, beds):
         player1.collision(bed)
         bed.draw(window, main_font)
         if bed.destruction_points >= 100:
+            bed_destroyed_sound.play()
             player1.killable = True
             game_over_sound.play()
             if points > int(highscore):
@@ -294,6 +301,12 @@ def main():
                 interface.clicked1 = False
             if interface.clicked2:
                 run = False
+            if interface.clicked_github and py.time.get_ticks() - interface.last_update >= 300:
+                interface.clicked_github = False
+                click_sound.play()
+                webbrowser.get(
+                    'windows-default').open('https://github.com/ahmedkerouat/Somno-Ignis')
+                interface.last_update = py.time.get_ticks()
 
             py.display.update()
 
@@ -310,7 +323,7 @@ def main():
                                     bed.rect.midleft, bed.rect.midright]
                                 for bed_point in bed_points:
                                     if player1.rect.collidepoint(bed_point) and player1.energy > 33:
-                                        player1.x += 100 * player1.d_x
+                                        player1.x += 200 * player1.d_x
                                         player1.tricks += 1
                                         player1.explosion_effect()
                                         player1.energy -= 30

@@ -405,6 +405,7 @@ class Enemy(py.sprite.Sprite):
                 self.animate(1, 5 - self.substract)
             if self.attack == True:
                 self.animate(2, 5 - self.add)
+
             else:
                 self.animate(0, 3)
         else:
