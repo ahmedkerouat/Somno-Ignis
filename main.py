@@ -105,7 +105,7 @@ def game_input(last_update, last_update_fire, player1):
 
     if player1.energy > 0 and player1.attack == False and player1.shoot == False and player1.killable == False:
 
-        if keys[py.K_d] and player1.x < WIDTH - player1.width and player1.right_move:
+        if (keys[py.K_d] or keys[py.K_RIGHT]) and player1.x < WIDTH - player1.width and player1.right_move:
             player1.flip = False
             player1.d_x = 1
             player1.x += 1 * player1.speed
@@ -113,7 +113,7 @@ def game_input(last_update, last_update_fire, player1):
             player1.run = True
             player1.energy -= 0.08
 
-        if keys[py.K_q] and player1.x > player1.width - 10 and player1.left_move:
+        if (keys[py.K_q] or keys[py.K_LEFT] or keys[py.K_a]) and player1.x > player1.width - 10 and player1.left_move:
             player1.flip = True
             player1.d_x = -1
             player1.x -= 1 * player1.speed
@@ -121,14 +121,14 @@ def game_input(last_update, last_update_fire, player1):
             player1.run = True
             player1.energy -= 0.08
 
-        if keys[py.K_s] and player1.y < HEIGHT - player1.height and player1.down_move:
+        if (keys[py.K_s] or keys[py.K_DOWN]) and player1.y < HEIGHT - player1.height and player1.down_move:
             player1.y += 1 * player1.speed
             player1.d_y = -1
             player1.idle = False
             player1.run = True
             player1.energy -= 0.08
 
-        if keys[py.K_z] and player1.y > player1.height and player1.up_move:
+        if (keys[py.K_z] or keys[py.K_UP] or keys[py.K_w]) and player1.y > player1.height and player1.up_move:
             player1.y -= 1 * player1.speed
             player1.d_y = 1
             player1.idle = False
@@ -314,9 +314,10 @@ def main():
             if event.type == py.QUIT:
                 run = False
                 sys.exit()
+
             if game:
                 if event.type == py.KEYUP and player1.alive:
-                    if event.key == py.K_a and player1.energy > 3:
+                    if event.key == py.K_SPACE and player1.energy > 3:
                         if py.time.get_ticks() - last_update > 300:
                             for bed in beds:
                                 bed_points = [
@@ -339,13 +340,13 @@ def main():
                             player1.energy -= 3
                             last_update = py.time.get_ticks()
 
-                    if event.key == py.K_SPACE and player1.energy > 15:
-                        if py.time.get_ticks() - last_update_fire > 300:
-                            player1.shoot = True
-                            bullet_sound.play()
-                            player1.fireball()
-                            player1.energy -= 15
-                            last_update_fire = py.time.get_ticks()
+                if event.type == py.MOUSEBUTTONUP and player1.energy > 15:
+                    if py.time.get_ticks() - last_update_fire > 300:
+                        player1.shoot = True
+                        bullet_sound.play()
+                        player1.fireball()
+                        player1.energy -= 15
+                        last_update_fire = py.time.get_ticks()
 
 
 if __name__ == "__main__":
