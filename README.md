@@ -8,7 +8,7 @@
 
 #### &emsp;**Somno Ignis** is a game where you incarn a fire spirit, that really wants to have some sleep.
 
-#### &emsp;Unfortunately, this will be a little be complicated as monsters will come nearby to bother him. 
+#### &emsp;Unfortunately, this will be a little bit complicated as monsters will come nearby to bother him. 
 
 #### &emsp;The game ends, when the bed is destroyed. 
 
