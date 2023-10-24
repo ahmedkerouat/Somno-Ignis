@@ -6,11 +6,11 @@
 
 </br>
 
-#### &emsp;**Somno Ignis** is a game where you incarn a fire spirit, that really wants to have some sleep.
+#### &emsp;**Somno Ignis** is a game where you incarnate a fire spirit that wants to sleep.
 
-#### &emsp;Unfortunately, this will be a little bit complicated as monsters will come nearby to bother him. 
+#### &emsp; Unfortunately, this will be complicated as monsters will come nearby to bother him. 
 
-#### &emsp;The game ends, when the bed is destroyed. 
+#### &emsp; The game ends, when the bed is destroyed. 
 
 <br>
 
@@ -24,7 +24,7 @@
 
 #
 
-# How to install it ? 💤
+# How to install it? 💤
 
 <br>
 
